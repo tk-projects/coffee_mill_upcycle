@@ -32,6 +32,44 @@ enum class language {
 };
 
 
+// Menu entries
+enum class setting_item : uint8_t {
+    SINGLE,
+    DOUBLE,
+    BRIGHTNESS,
+    STANDBY_TIMEOUT,
+    ANIMATION,
+    EXIT,
+    COUNT
+};
+
+// Menu operating mode
+enum class settings_mode : uint8_t {
+    NAVIGATE,
+    EDIT,
+    CONFIRM,
+    CONFIRMED
+};
+
+// AGrinding animation options
+enum class coffee_animation_mode : uint8_t {
+    PROGRESS = 0,
+    STANDARD = 1,
+    OFF = 2
+};
+
+enum class confirmation_choice : uint8_t {
+    SAVE,
+    DISCARD
+};
+
+enum class save_option_manuel_grind {
+    NO,
+    SINGLE,
+    DOUBLE
+};
+
+
 // Convert state to string for debugging
 inline const char* state_to_string(state value) {
 
