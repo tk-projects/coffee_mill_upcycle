@@ -32,11 +32,11 @@ constexpr uint32_t DISPLAY_INTERVAL_MS = 40;
 
 // Settings
 constexpr uint32_t SETTINGS_TIMEOUT_MS = 10000;
-constexpr uint32_t SETTINGS_CONFIRMATION_DURATION_MS = 1000;
+constexpr uint32_t SETTINGS_CONFIRMATION_DURATION_MS = 800;
 constexpr coffee_animation_mode DEFAULT_COFFEE_ANIMATION_MODE = coffee_animation_mode::PROGRESS;
 
 // Standard animation timing
-constexpr uint32_t COFFEE_STANDARD_INTERVAL_MS = 150;
+constexpr uint32_t COFFEE_STANDARD_INTERVAL_MS = 130;
 
 // Debug configuration
 constexpr bool ENABLE_DEBUG_MODE = true;

@@ -121,7 +121,6 @@ void app_controller::handle_event(event new_event, uint32_t now) {
     Serial.println(event_to_string(new_event));
 
     switch (current_state) {
-
         case state::STANDBY:
             // Transition into AUTO_GRINDING
             if (new_event == event::SINGLE_PRESSED) {
@@ -162,14 +161,13 @@ void app_controller::handle_event(event new_event, uint32_t now) {
             break;
 
         case state::MANUAL_GRINDING:
+            // Finish manual grinding and store duration
+            if (new_event == event::MANUAL_GRIND_STOPPED) {
+                manual_grind_duration_ms = now - manual_grind_start_ms;
+                change_state(state::SAVE_PROMPT, now);
+            }
 
-        // Finish manual grinding and store duration
-        if (new_event == event::MANUAL_GRIND_STOPPED) {
-            manual_grind_duration_ms = now - manual_grind_start_ms;
-            change_state(state::SAVE_PROMPT, now);
-        }
-
-        break;
+            break;
 
         case state::SAVE_PROMPT:
             // Allow manual grinding at any time
@@ -242,9 +240,7 @@ void app_controller::handle_event(event new_event, uint32_t now) {
             }
 
             switch (new_event) {
-
                 case event::ENCODER_LEFT:
-
                     last_settings_activity = now;
 
                     if (settings.get_mode() == settings_mode::NAVIGATE) {
@@ -308,6 +304,18 @@ void app_controller::handle_event(event new_event, uint32_t now) {
                         settings.toggle_edit();
                     }
 
+                    display.invalidate();
+                    break;
+
+                case event::SINGLE_PRESSED:
+                    settings.discard_changes();
+                    change_state(state::STANDBY, now);
+                    display.invalidate();
+                    break;
+
+                case event::DOUBLE_PRESSED:
+                    settings.discard_changes();
+                    change_state(state::STANDBY, now);
                     display.invalidate();
                     break;
 
