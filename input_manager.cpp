@@ -18,6 +18,19 @@ void input_manager::init() {
     //pinMode(PIN_MANUAL_GRIND, INPUT);   // (This input has already a pullup on the orignial pcb)
     pinMode(PIN_MANUAL_GRIND, INPUT_PULLUP);  // For testing only
 
+    // Interrupt on every signal change
+    /*attachInterrupt(
+        digitalPinToInterrupt(ENCODER_A_PIN),
+        encoder_isr,
+        CHANGE
+    );
+
+    attachInterrupt(
+        digitalPinToInterrupt(ENCODER_B_PIN),
+        encoder_isr,
+        CHANGE
+    );*/
+
     uint32_t now = millis();
 
     // Initialize button states

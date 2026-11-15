@@ -1,9 +1,11 @@
+
 #ifndef SETTINGS_MANAGER_H
 #define SETTINGS_MANAGER_H
 
 #include <Arduino.h>
 #include "types.h"
 #include "config.h"
+
 
 class settings_manager {
 
@@ -27,7 +29,40 @@ public:
     // Language
     language get_language() const;
     void set_language(language new_language);
+
+    // Flash storage
     void save_settings();
+
+    // Menu navigation
+    void next();
+    void previous();
+
+    // Menu editing
+    void increase();
+    void decrease();
+    void toggle_edit();
+
+    // Settings session
+    void begin_session();
+    bool has_changes() const;
+    void discard_changes();
+
+    // Save confirmation
+    void enter_confirmation();
+    void toggle_confirmation_choice();
+    confirmation_choice get_confirmation_choice() const;
+    void enter_confirmed();
+
+    // Menu status
+    setting_item get_selected_item() const;
+    settings_mode get_mode() const;
+
+    // Menu display
+    const char* get_item_name(setting_item item) const;
+    void get_item_value(setting_item item, char* buffer, size_t size) const;
+
+    coffee_animation_mode get_animation_mode() const;
+    void set_animation_mode(coffee_animation_mode mode);
 
 private:
     // Settings values (initialized with defaults)
@@ -39,8 +74,28 @@ private:
 
     language current_language = language::ENGLISH;
 
+    // Original settings before editing
+    uint32_t original_single_grind_time_ms;
+    uint32_t original_double_grind_time_ms;
+
+    uint8_t original_display_brightness;
+    uint32_t original_standby_timeout_ms;
+
+    coffee_animation_mode animation_mode = DEFAULT_COFFEE_ANIMATION_MODE;
+    coffee_animation_mode original_animation_mode = DEFAULT_COFFEE_ANIMATION_MODE;
+
+    // Currently selected confirmation option
+    confirmation_choice selected_confirmation = confirmation_choice::SAVE;
+
     // Settings status
     bool settings_dirty = false;
+
+    // Menu status
+    static constexpr uint8_t SETTINGS_COUNT =
+        static_cast<uint8_t>(setting_item::COUNT);
+
+    uint8_t selected_index = 0;
+    settings_mode mode = settings_mode::NAVIGATE;
 
     // Internal functions
     void load_settings();
