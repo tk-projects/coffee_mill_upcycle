@@ -31,6 +31,7 @@ private:
 
     // Grind mode
     grind_mode current_grind_mode = grind_mode::SINGLE;
+    uint32_t grinding_finished_start_time = 0;
 
     // Manual grinding
     uint32_t manual_grind_start_ms = 0;

@@ -44,8 +44,10 @@ void display_manager::update(state current_state, grind_mode current_mode, uint3
     // Detect state change
     if (current_state != displayed_state) {
 
-        // Start coffee animation when entering AUTO_GRINDING
-        if (current_state == state::AUTO_GRINDING) {
+        // Start animation when entering the corresponding state
+        if (current_state == state::AUTO_GRINDING ||
+            current_state == state::GRINDING_FINISHED) {
+
             animation_start_time = now;
         }
 
@@ -56,8 +58,8 @@ void display_manager::update(state current_state, grind_mode current_mode, uint3
     // Check if cyclic refresh is required
     bool cyclic_refresh =
         current_state == state::AUTO_GRINDING ||
-        current_state == state::MANUAL_GRINDING;// ||
-        //current_state == state::SETTINGS;
+        current_state == state::MANUAL_GRINDING ||
+        current_state == state::GRINDING_FINISHED;
 
     // Nothing changed and no cyclic refresh required
     if (!display_dirty && !cyclic_refresh) {
@@ -101,6 +103,9 @@ void display_manager::update(state current_state, grind_mode current_mode, uint3
 
         case state::SETTINGS:
             draw_settings();
+            break;
+        case state::GRINDING_FINISHED:
+            draw_grinding_finished(current_mode, now);
             break;
     }
 
@@ -877,4 +882,186 @@ void display_manager::apply_brightness() {
 
     // Remember applied brightness
     last_display_brightness = brightness;
+}
+
+void display_manager::draw_animated_checkmark(
+    int center_x,
+    int center_y,
+    uint32_t elapsed
+) {
+    // Checkmark coordinates
+    const int x1 = center_x - 7;
+    const int y1 = center_y;
+
+    const int x2 = center_x - 2;
+    const int y2 = center_y + 5;
+
+    const int x3 = center_x + 8;
+    const int y3 = center_y - 5;
+
+    // Calculate progress of first stroke
+    uint32_t first_elapsed = min(
+        elapsed,
+        CHECKMARK_FIRST_STROKE_MS
+    );
+
+    int first_x = x1 +
+        ((x2 - x1) * (int32_t)first_elapsed) /
+        (int32_t)CHECKMARK_FIRST_STROKE_MS;
+
+    int first_y = y1 +
+        ((y2 - y1) * (int32_t)first_elapsed) /
+        (int32_t)CHECKMARK_FIRST_STROKE_MS;
+
+    // Draw first stroke
+    if (elapsed > 0) {
+
+        for (int offset = -1; offset <= 2; offset++) {
+
+            oled.drawLine(
+                x1,
+                y1 + offset,
+                first_x,
+                first_y + offset
+            );
+        }
+    }
+
+    // Draw second stroke after first stroke is finished
+    if (elapsed >= CHECKMARK_FIRST_STROKE_MS) {
+
+        uint32_t second_elapsed = min(
+            elapsed - CHECKMARK_FIRST_STROKE_MS,
+            CHECKMARK_SECOND_STROKE_MS
+        );
+
+        int second_x = x2 +
+            ((x3 - x2) * (int32_t)second_elapsed) /
+            (int32_t)CHECKMARK_SECOND_STROKE_MS;
+
+        int second_y = y2 +
+            ((y3 - y2) * (int32_t)second_elapsed) /
+            (int32_t)CHECKMARK_SECOND_STROKE_MS;
+
+        for (int offset = -1; offset <= 2; offset++) {
+
+            oled.drawLine(
+                x2,
+                y2 + offset,
+                second_x,
+                second_y + offset
+            );
+        }
+    }
+}
+
+void display_manager::draw_grinding_finished(grind_mode mode, uint32_t now) {
+    // Calculate elapsed animation time
+    uint32_t elapsed = now - animation_start_time;
+
+    constexpr int DISPLAY_WIDTH = 128;
+
+    // Draw grinding mode
+    oled.setFont(u8g2_font_helvR08_tf);
+
+    const char* mode_text =
+        (mode == grind_mode::SINGLE)
+        ? "SINGLE"
+        : "DOUBLE";
+
+    uint8_t mode_width = oled.getStrWidth(mode_text);
+    uint8_t x_pos_grind_type = 42;
+
+    // Adjust position if animation is enabled
+    if (settings->get_animation_mode() == coffee_animation_mode::PROGRESS) {
+        x_pos_grind_type = 83;
+        const uint8_t* bitmap = coffee_frame_29;
+
+        // Draw last frame
+        oled.drawXBMP(
+            54,
+            -2,
+            COFFEE_ICON_WIDTH,
+            COFFEE_ICON_HEIGHT,
+            bitmap
+        );
+    }
+    else if (settings->get_animation_mode() == coffee_animation_mode::STANDARD) {
+        x_pos_grind_type = 83;    
+    }
+
+    oled.drawStr(
+        x_pos_grind_type,
+        12,
+        mode_text
+    );
+
+    // Draw animated DONE text
+    oled.setFont(u8g2_font_helvR12_tf);
+
+    const char* done_text = "Done";
+
+    // Calculate width of complete text
+    uint8_t text_width =
+        oled.getStrWidth(done_text);
+
+    // Checkmark and text layout
+    constexpr uint8_t checkmark_width = 16;
+    constexpr uint8_t spacing = 8;
+
+    uint8_t total_width =
+        checkmark_width + spacing + text_width;
+
+    int start_x =
+        (DISPLAY_WIDTH - total_width) / 2;
+
+    // Draw animated checkmark
+    draw_animated_checkmark(
+        start_x + 7,
+        33,
+        elapsed
+    );
+
+    // Calculate visible characters
+    uint8_t visible_chars = min(
+        (uint32_t)4,
+        1 + elapsed / DONE_LETTER_INTERVAL_MS
+    );
+
+    // Prepare animated text
+    char text_buffer[5] = {};
+
+    for (uint8_t i = 0; i < visible_chars; i++) {
+        text_buffer[i] = done_text[i];
+    }
+
+    // Draw text at fixed position
+    oled.drawStr(
+        start_x + checkmark_width + spacing,
+        43,
+        text_buffer
+    );
+
+    // Draw fully filled progress bar
+    constexpr uint8_t bar_x = 5;
+    constexpr uint8_t bar_y = 51;
+    constexpr uint8_t bar_width = 118;
+    constexpr uint8_t bar_height = 11;
+    constexpr uint8_t bar_radius = 4;
+
+    oled.drawRFrame(
+        bar_x,
+        bar_y,
+        bar_width,
+        bar_height,
+        bar_radius
+    );
+
+    oled.drawRBox(
+        bar_x + 2,
+        bar_y + 2,
+        bar_width - 4,
+        bar_height - 4,
+        2
+    );
 }

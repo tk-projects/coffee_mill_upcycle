@@ -111,6 +111,14 @@ void app_controller::handle_state(uint32_t now) {
                 change_state(state::STANDBY, now);
             }
             break;
+
+        case state::GRINDING_FINISHED:
+            // Return to standby after completion animation
+            if (now - grinding_finished_start_time >= GRINDING_FINISHED_DURATION_MS) {
+                change_state(state::STANDBY, now);
+            }
+
+            break;
     }
 }
 
@@ -151,11 +159,14 @@ void app_controller::handle_event(event new_event, uint32_t now) {
             break;
 
         case state::AUTO_GRINDING:
-            // If the grinder finishes or the single or double button is pressed again during auto grind, AUTO_GRINDING will be exited
-            if (new_event == event::SINGLE_PRESSED ||
-                new_event == event::DOUBLE_PRESSED ||
-                new_event == event::GRIND_TIMER_FINISHED) {
+            // Grinding finished successfully
+            if (new_event == event::GRIND_TIMER_FINISHED) {
+                change_state(state::GRINDING_FINISHED, now);
 
+            }
+
+            // If the grinder finishes or the single or double button is pressed again during auto grind, AUTO_GRINDING will be exited
+            if (new_event == event::SINGLE_PRESSED || new_event == event::DOUBLE_PRESSED) {
                 change_state(state::STANDBY, now);
             }
             break;
@@ -286,7 +297,6 @@ void app_controller::handle_event(event new_event, uint32_t now) {
                             settings.discard_changes();
                         }
                         settings.enter_confirmed();
-                        //change_state(state::STANDBY, now);
                     }
 
                     // Handle EXIT menu item
@@ -340,16 +350,13 @@ void app_controller::change_state(state new_state, uint32_t now) {
 
     // Initialize new state
     switch (new_state) {
-
         case state::SETTINGS:
-
             last_settings_activity = now;
             settings.begin_session();
 
             break;
 
         case state::MANUAL_GRINDING:
-
             manual_grind_start_ms = now;
             manual_grind_duration_ms = 0;
 
@@ -359,6 +366,11 @@ void app_controller::change_state(state new_state, uint32_t now) {
             selected_save_option = save_option_manuel_grind::NO;
             save_prompt_last_activity_ms = now;
             save_prompt_confirmed = false;
+
+            break;
+
+        case state::GRINDING_FINISHED:
+            grinding_finished_start_time = now;
 
             break;
 

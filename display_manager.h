@@ -43,6 +43,8 @@ private:
     void apply_brightness();
     void draw_manual_grinding(uint32_t elapsed_ms);
     void draw_save_prompt(uint32_t duration_ms, save_option_manuel_grind selected_option, bool confirmed);
+    void draw_grinding_finished(grind_mode mode, uint32_t now);
+    void draw_animated_checkmark(int center_x, int center_y, uint32_t elapsed);
 
     // Instances 
     const settings_manager* settings = nullptr;

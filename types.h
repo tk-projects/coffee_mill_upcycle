@@ -6,7 +6,8 @@ enum class state {
     AUTO_GRINDING,
     MANUAL_GRINDING,
     SAVE_PROMPT,
-    SETTINGS
+    SETTINGS,
+    GRINDING_FINISHED
 };
 
 enum class event {

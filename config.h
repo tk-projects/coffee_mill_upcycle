@@ -57,4 +57,14 @@ constexpr uint8_t MIN_DISPLAY_BRIGHTNESS = 0;
 constexpr uint8_t MAX_DISPLAY_BRIGHTNESS = 100;
 constexpr uint8_t DISPLAY_BRIGHTNESS_STEP = 10;
 
+// Grinding completion display
+constexpr uint32_t GRINDING_FINISHED_DURATION_MS = 2500;
+
+// Animated checkmark timing
+constexpr uint32_t CHECKMARK_FIRST_STROKE_MS = 150;
+constexpr uint32_t CHECKMARK_SECOND_STROKE_MS = 300;
+
+// Animated DONE text
+constexpr uint32_t DONE_LETTER_INTERVAL_MS = 150;
+
 #endif
